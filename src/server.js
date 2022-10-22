@@ -19,7 +19,9 @@ const RecipeLikes = require('./schemas/RecipeLikes');
 
 const app = express();
 
-app.use(cors());
+app.use(cors({
+    origin: '*'
+}));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
 
@@ -42,6 +44,8 @@ const db = mongoose.connection
 app.post('/api/create-user', async (req, res) => {
 
     const body = req.body;
+
+    console.log(body);
 
     if(typeof body === 'undefined' || typeof body.username === 'undefined') {
         res.status(501);
@@ -417,6 +421,34 @@ app.get('/api/recipe-likes/:username', async (req, res) => {
 
     res.status(200);
     res.send(likes);
+})
+
+app.get('/api/user/:username', async (req, res) => {
+    const params = req.params;
+
+    console.log("params:", params);
+
+    if(typeof params === 'undefined') {
+
+        res.status(501);
+        res.send("Invalid request, missing param username");
+        return;
+    }
+
+    // Search for the user
+    const users = await User.find({username: params.username});
+
+    // if there are no users found with that username we return
+    if(users.length === 0) {
+        res.status(404);
+        res.send("User not found");
+        return;
+    } 
+
+    const user = users[0];
+
+    res.status(200);
+    res.send(user);
 })
 
 app.listen(PORT, () => console.log("Server starting", PORT));
