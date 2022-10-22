@@ -19,9 +19,7 @@ const RecipeLikes = require('./schemas/RecipeLikes');
 
 const app = express();
 
-app.use(cors({
-    origin: '*'
-}));
+app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
 
@@ -330,6 +328,7 @@ app.get('/api/workouts/:username', async (req, res) => {
     const workouts = await Workout.find({user_id: user.id});
 
     res.status(200);
+    res.header('Access-Control-Allow-Origin', '*');
     res.send(workouts);
 })
 
@@ -424,6 +423,7 @@ app.get('/api/recipe-likes/:username', async (req, res) => {
 })
 
 app.get('/api/user/:username', async (req, res) => {
+
     const params = req.params;
 
     console.log("params:", params);
@@ -431,6 +431,7 @@ app.get('/api/user/:username', async (req, res) => {
     if(typeof params === 'undefined') {
 
         res.status(501);
+        res.header('Access-Control-Allow-Origin', '*');
         res.send("Invalid request, missing param username");
         return;
     }
@@ -441,13 +442,15 @@ app.get('/api/user/:username', async (req, res) => {
     // if there are no users found with that username we return
     if(users.length === 0) {
         res.status(404);
+        res.header('Access-Control-Allow-Origin', '*');
         res.send("User not found");
         return;
     } 
 
     const user = users[0];
 
-    res.status(200);
+    //res.status(200);
+    res.header('Access-Control-Allow-Origin', '*');
     res.send(user);
 })
 
