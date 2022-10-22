@@ -185,4 +185,62 @@ app.post('/api/create-recipe', async (req, res) => {
     res.send(recipe);
 })
 
+app.post('/api/like-recipe', async (req, res) => {
+
+    const body = req.body;
+
+    // Search for the user
+    const users = await User.find({username: body.username});
+
+    // if there are no users found with that username we return
+    if(users.length === 0) {
+        res.status(404);
+        res.send("User not found");
+        return;
+    } 
+
+    // getting the user
+    const user = users[0];
+
+    // Search for the recipes
+    const recipes = await Recipe.find({id: body.recipe_id});
+
+    // if there are no recipes found with that id we return
+    if(recipes.length === 0) {
+        res.status(404);
+        res.send("Recipe not found");
+        return;
+    } 
+
+    // getting the user
+    const recipe = recipes[0];
+
+    const likes = await RecipeLikes.find({recipe_id: recipe.id, user_id: user.id});
+    const like = likes[0];
+
+    if(likes.length > 0) {
+        const deleteLike = await RecipeLikes.deleteOne({id: like.id});
+
+        res.status(200);
+        res.send("Unliked recipe");
+        return;
+    }
+
+    const id = uuid();
+
+    const recipeLike = await RecipeLikes.create({
+        id,
+        user_id: user.id,
+        recipe_id: recipe.id,
+        date_liked: new Date().getTime()
+    });
+
+
+    console.log(recipeLike);
+
+    res.status(200);
+    res.send(recipeLike);
+})
+
+
 app.listen(PORT, () => console.log("Server starting", PORT));
