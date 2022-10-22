@@ -242,5 +242,181 @@ app.post('/api/like-recipe', async (req, res) => {
     res.send(recipeLike);
 })
 
+app.post('/api/like-workout', async (req, res) => {
+
+    const body = req.body;
+
+    // Search for the user
+    const users = await User.find({username: body.username});
+
+    // if there are no users found with that username we return
+    if(users.length === 0) {
+        res.status(404);
+        res.send("User not found");
+        return;
+    } 
+
+    // getting the user
+    const user = users[0];
+
+    // Search for the recipes
+    const workouts = await Workout.find({id: body.workout_id});
+
+    // if there are no recipes found with that id we return
+    if(workouts.length === 0) {
+        res.status(404);
+        res.send("Workout not found");
+        return;
+    } 
+
+    // getting the user
+    const workout = workouts[0];
+
+    const likes = await WorkoutLikes.find({recipe_id: workout.id, user_id: user.id});
+    const like = likes[0];
+
+    if(likes.length > 0) {
+        const deleteLike = await WorkoutLikes.deleteOne({id: like.id});
+
+        res.status(200);
+        res.send("Unliked workout");
+        return;
+    }
+
+    const id = uuid();
+
+    const workoutLike = await WorkoutLikes.create({
+        id,
+        user_id: user.id,
+        workout_id: workout.id,
+        date_liked: new Date().getTime()
+    });
+
+
+    console.log(workoutLike);
+
+    res.status(200);
+    res.send(workoutLike);
+})
+
+app.get('/api/workouts/:username', async (req, res) => {
+    const params = req.params;
+
+    console.log("params:", params);
+
+    if(typeof params === 'undefined') {
+
+        res.status(501);
+        res.send("Invalid request, missing param username");
+        return;
+    }
+
+    // Search for the user
+    const users = await User.find({username: params.username});
+
+    // if there are no users found with that username we return
+    if(users.length === 0) {
+        res.status(404);
+        res.send("User not found");
+        return;
+    } 
+
+    const user = users[0];
+
+    const workouts = await Workout.find({user_id: user.id});
+
+    res.status(200);
+    res.send(workouts);
+})
+
+app.get('/api/recipes/:username', async (req, res) => {
+    const params = req.params;
+
+    console.log("params:", params);
+
+    if(typeof params === 'undefined') {
+
+        res.status(501);
+        res.send("Invalid request, missing param username");
+        return;
+    }
+
+    // Search for the user
+    const users = await User.find({username: params.username});
+
+    // if there are no users found with that username we return
+    if(users.length === 0) {
+        res.status(404);
+        res.send("User not found");
+        return;
+    } 
+
+    const user = users[0];
+
+    const recipes = await Recipe.find({user_id: user.id});
+
+    res.status(200);
+    res.send(recipes);
+})
+
+app.get('/api/workout-likes/:username', async (req, res) => {
+    const params = req.params;
+
+    console.log("params:", params);
+
+    if(typeof params === 'undefined') {
+
+        res.status(501);
+        res.send("Invalid request, missing param username");
+        return;
+    }
+
+    // Search for the user
+    const users = await User.find({username: params.username});
+
+    // if there are no users found with that username we return
+    if(users.length === 0) {
+        res.status(404);
+        res.send("User not found");
+        return;
+    } 
+
+    const user = users[0];
+
+    const likes = await WorkoutLikes.find({user_id: user.id});
+
+    res.status(200);
+    res.send(likes);
+})
+
+app.get('/api/recipe-likes/:username', async (req, res) => {
+    const params = req.params;
+
+    console.log("params:", params);
+
+    if(typeof params === 'undefined') {
+
+        res.status(501);
+        res.send("Invalid request, missing param username");
+        return;
+    }
+
+    // Search for the user
+    const users = await User.find({username: params.username});
+
+    // if there are no users found with that username we return
+    if(users.length === 0) {
+        res.status(404);
+        res.send("User not found");
+        return;
+    } 
+
+    const user = users[0];
+
+    const likes = await RecipeLikes.find({user_id: user.id});
+
+    res.status(200);
+    res.send(likes);
+})
 
 app.listen(PORT, () => console.log("Server starting", PORT));
