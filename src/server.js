@@ -13,6 +13,9 @@ const {v4: uuid} = require('uuid');
 
 const User = require('./schemas/User.js');
 const Workout = require('./schemas/Workout.js');
+const Recipe = require('./schemas/Recipe.js');
+const WorkoutLikes = require('./schemas/WorkoutLikes');
+const RecipeLikes = require('./schemas/RecipeLikes');
 
 const app = express();
 
@@ -39,8 +42,12 @@ const db = mongoose.connection
 app.post('/api/create-user', async (req, res) => {
 
     const body = req.body;
-    
-    console.log(body.username);
+
+    if(typeof body === 'undefined' || typeof body.username === 'undefined') {
+        res.status(501);
+        res.send('Invalid username');
+        return;
+    }
 
     const doesUserExist = await User.find({username: body.username});
 
@@ -51,10 +58,11 @@ app.post('/api/create-user', async (req, res) => {
     }
 
     const id = uuid();
+    const username = body.username;
 
     const user = await User.create({
         id,
-        username: 'test-shayan',
+        username: username,
         date_joined: new Date().getTime(),
         streak: 0
     });
@@ -66,32 +74,52 @@ app.post('/api/create-user', async (req, res) => {
 app.post('/api/create-workout', async (req, res) => {
 
     const body = req.body;
-    
-    console.log(body);
+
+    // Search for the user
+    const users = await User.find({username: body.username});
+
+    // if there are no users found with that username we return
+    if(users.length === 0) {
+
+        res.status(404);
+        res.send("User not found");
+        return;
+    } 
+
+    // getting the user
+    const user = users[0];
+
+    // parsing the request body
+    const name = body.name;
+    const type = body.type;
+
+    const _workoutSteps = body.workoutSteps;
+
+    const workoutSteps = [];
+
+    for(const w of _workoutSteps) {
+        workoutSteps.push({
+            title: w.title,
+            description: w.description,
+            duration: w.duration
+        })
+    }
+
+    if(workoutSteps.length === 0) {
+        res.status(403);
+        res.send("Must provide at least one workout step");
+        return;
+    }
 
     const id = uuid();
 
-    const workoutSteps = [
-        {
-            title: "Warmp Up",
-            description: "Spend some time warming up before doing anything",
-            duration: 15
-        }
-    ]
-
     const workout = await Workout.create({
         id,
-        user_id: "user-id-here",
-        name: "Workout Name",
-        type: "Legs",
+        user_id: user.id,
+        name: name,
+        type: type,
         date_created: new Date().getTime(),
-        workoutSteps: [
-            {
-                title: "Warmp Up",
-                description: "Spend some time warming up before doing anything",
-                duration: 123
-            }
-        ]
+        workoutSteps: workoutSteps
     });
 
 
@@ -99,6 +127,62 @@ app.post('/api/create-workout', async (req, res) => {
 
     res.status(200);
     res.send(workout);
+})
+
+app.post('/api/create-recipe', async (req, res) => {
+
+    const body = req.body;
+
+    // Search for the user
+    const users = await User.find({username: body.username});
+
+    // if there are no users found with that username we return
+    if(users.length === 0) {
+        res.status(404);
+        res.send("User not found");
+        return;
+    } 
+
+    // getting the user
+    const user = users[0];
+
+    // parsing the request body
+    const name = body.name;
+    const calories = body.calories;
+
+    const _recipeSteps = body.recipeSteps;
+
+    const recipeSteps = [];
+
+    for(const r of _recipeSteps) {
+        recipeSteps.push({
+            title: r.title,
+            description: r.description
+        })
+    }
+
+    if(recipeSteps.length === 0) {
+        res.status(403);
+        res.send("Must provide at least one recipe step");
+        return;
+    }
+
+    const id = uuid();
+
+    const recipe = await Recipe.create({
+        id,
+        user_id: user.id,
+        name: name,
+        calories: calories,
+        date_created: new Date().getTime(),
+        recipeSteps: recipeSteps
+    });
+
+
+    console.log(recipe);
+
+    res.status(200);
+    res.send(recipe);
 })
 
 app.listen(PORT, () => console.log("Server starting", PORT));

@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-const WorkoutStep = require('./WorkoutStep.js')
 
 const Schema = mongoose.Schema;
 
